@@ -1,0 +1,127 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<style>
+*{box-sizing:border-box;margin:0;padding:0}
+body{font-family:sans-serif;padding:10px;background:#f8f8f8}
+.c{background:#fff;border-radius:12px;padding:12px;margin-bottom:10px;border:0.5px solid #e0e0e0}
+h3{font-size:13px;font-weight:500;color:#111;margin-bottom:8px}
+.sg{display:grid;grid-template-columns:repeat(3,1fr);gap:6px;margin-bottom:10px}
+.s{background:#f5f5f5;border-radius:8px;padding:8px;text-align:center}
+.sv{font-size:18px;font-weight:500;color:#111}
+.sl{font-size:10px;color:#888;margin-top:2px}
+.pb{height:8px;background:#eee;border-radius:99px;overflow:hidden;margin-bottom:4px}
+.pbf{height:100%;background:#378ADD;transition:width 0.3s}
+.pl{display:flex;justify-content:space-between;font-size:11px;color:#888}
+.rr{display:flex;justify-content:space-between;font-size:11px;color:#888;margin-top:5px}
+.rv{font-weight:500;color:#111}
+.g{display:grid;gap:4px;margin-top:8px}
+.cell{border-radius:8px;display:flex;flex-direction:column;align-items:center;justify-content:center;padding:3px;cursor:pointer;min-height:48px}
+.info{background:#f5f5f5;border-radius:8px;padding:10px;margin-top:8px;font-size:12px;color:#333;min-height:36px}
+</style>
+</head>
+<body>
+<div class="c">
+  <h3>Avanzamento</h3>
+  <div class="sg">
+    <div class="s"><div class="sv" id="sf">—</div><div class="sl">PM fatti</div></div>
+    <div class="s"><div class="sv" id="sm">—</div><div class="sl">Mancanti</div></div>
+    <div class="s"><div class="sv" id="sr">—</div><div class="sl">PM/mese nec.</div></div>
+  </div>
+  <div class="pb"><div class="pbf" id="pf" style="width:0%"></div></div>
+  <div class="pl"><span id="pp">0%</span><span id="pt">—</span></div>
+  <div class="rr"><span>Periodo: <span class="rv" id="rm">—</span></span><span>Ritmo: <span class="rv" id="ra">—</span></span></div>
+</div>
+<div class="c">
+  <h3>Griglia PM</h3>
+  <div class="g" id="grid"></div>
+  <div class="info" id="ib">Tocca una cella per i dettagli</div>
+</div>
+
+<script>
+const bc={"Iscrizione":"#3B6D11","No BuonFine":"#A32D2D","Presentazione":"#185FA5","Rimandato":"#BA7517","Dare Seguito":"#854F0B","No Show":"#5F5E5A","Prodotti":"#534AB7"};
+
+function parseDate(s){
+  if(!s) return null;
+  const p=s.split("/");
+  if(p.length===3) return new Date(+p[2],+p[1]-1,+p[0]);
+  return new Date(s);
+}
+
+function fd(s){
+  if(!s) return "";
+  const p=s.split("/");
+  return p.length===3?p[0]+"/"+p[1]+"/"+p[2].slice(-2):s;
+}
+
+function cols(t){return t<=8?4:t<=15?5:t<=30?6:t<=50?8:10}
+
+function init(){
+  const params=new URLSearchParams(window.location.search);
+  const target=parseInt(params.get("t"))||0;
+  const ds=params.get("ds")||"";
+  const de=params.get("de")||"";
+  const esitiRaw=params.get("e")||"";
+  const nomiRaw=params.get("n")||"";
+  const dateRaw=params.get("d")||"";
+  const flagsRaw=params.get("f")||"";
+
+  const esiti=esitiRaw?esitiRaw.split(",").map(s=>s.trim()):[];
+  const nomi=nomiRaw?nomiRaw.split(",").map(s=>s.trim()):[];
+  const date=dateRaw?dateRaw.split(",").map(s=>s.trim()):[];
+  const flags=flagsRaw?flagsRaw.split(",").map(s=>s.trim()):[];
+
+  let eF=[],nF=[],dF=[];
+  for(let i=0;i<esiti.length;i++){
+    if(flags[i]==="1"){eF.push(esiti[i]);nF.push(nomi[i]);dF.push(date[i]);}
+  }
+
+  const count=eF.length;
+  const d1=parseDate(ds),d2=parseDate(de);
+  let ms=1;
+  if(d1&&d2) ms=Math.max(1,Math.round((d2-d1)/2592000000));
+  const mc=Math.max(0,target-count);
+  const pct=target>0?Math.min(100,Math.round(count/target*100)):0;
+  const rn=mc>0?Math.ceil(mc/Math.max(1,ms)):0;
+  const ra=Math.round(count/Math.max(1,ms));
+
+  document.getElementById("sf").textContent=count;
+  document.getElementById("sm").textContent=mc;
+  document.getElementById("sr").textContent=rn>0?rn:"OK";
+  document.getElementById("pf").style.width=pct+"%";
+  document.getElementById("pp").textContent=pct+"% completato";
+  document.getElementById("pt").textContent=target+" PM";
+  document.getElementById("rm").textContent=ms+" mesi";
+  document.getElementById("ra").textContent=ra+" PM/mese";
+
+  const cl=cols(target);
+  const grid=document.getElementById("grid");
+  grid.style.gridTemplateColumns="repeat("+cl+",minmax(0,1fr))";
+
+  for(let i=0;i<target;i++){
+    const n=i+1;
+    const el=document.createElement("div");
+    el.className="cell";
+    if(i<count){
+      const c=bc[eF[i]]||"#ccc";
+      el.style.cssText="border:3px solid "+c+";border-radius:8px;display:flex;flex-direction:column;align-items:center;justify-content:center;padding:3px;cursor:pointer;min-height:48px";
+      el.innerHTML="<span style='font-size:8px;color:"+c+";line-height:1.2'>"+fd(dF[i])+"</span><span style='font-size:12px;font-weight:500;color:"+c+"'>"+n+"</span>";
+      (function(idx){el.addEventListener("click",function(){
+        document.getElementById("ib").innerHTML="<b>"+(nF[idx]||"—")+"</b> · "+(dF[idx]||"—")+" · "+(eF[idx]||"—");
+      });})(i);
+    } else if(i===count){
+      el.style.cssText="border:2px dashed #378ADD;border-radius:8px;display:flex;align-items:center;justify-content:center;min-height:48px";
+      el.innerHTML="<span style='font-size:12px;font-weight:500;color:#378ADD'>"+n+"</span>";
+    } else {
+      el.style.cssText="border:1px solid #ddd;border-radius:8px;display:flex;align-items:center;justify-content:center;min-height:48px";
+      el.innerHTML="<span style='font-size:12px;color:#bbb'>"+n+"</span>";
+    }
+    grid.appendChild(el);
+  }
+}
+
+init();
+</script>
+</body>
+</html>
