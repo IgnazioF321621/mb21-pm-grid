@@ -45,7 +45,7 @@ h3{font-size:13px;font-weight:500;color:#111;margin-bottom:8px}
 </div>
 
 <script>
-const bc={"Iscrizione":"#2E7D32","No BuonFine":"#C62828","Presentazione":"#1565C0","Rimandato":"#F57F17","Dare Seguito":"#E65100","No Show":"#546E7A","Prodotti":"#6A1B9A"};
+const bc={"Iscrizione":"#2E7D32","No BuonFine":"#C62828","Presentazione":"#1565C0","Dare Seguito":"#E65100"};
 
 function parseDate(s){
   if(!s) return null;
@@ -71,16 +71,15 @@ function init(){
   const de=parts[3]||"";
   const rowsRaw=parts.slice(4).join("|");
 
-  // DEBUG TEMPORANEO
-  document.getElementById("ib").textContent="parts[0]="+parts[0]+" parts[4]="+parts[4]+" rowsRaw_len="+rowsRaw.length+" firstSemi="+rowsRaw.indexOf(";")+" firstChar="+rowsRaw.charCodeAt(0);
+  const VALIDI={"Presentazione":true,"Iscrizione":true,"Dare Seguito":true,"No BuonFine":true};
 
-  // Ogni PM è "nome|esito|data" separato da ";"
+  // Ogni PM è "nome~esito~data" separato da ";"
   const pms=rowsRaw?rowsRaw.split(";").map(function(r){
-    const f=r.split("|");
+    const f=r.split("~");
     return{nome:f[0]||"",esito:f[1]||"",data:f[2]||""};
   }).filter(function(r){return r.nome;}):[]; 
 
-  const count=pms.length;
+  const count=pms.filter(function(p){return VALIDI[p.esito];}).length;
   const d1=parseDate(ds),d2=parseDate(de);
   let ms=1;
   if(d1&&d2) ms=Math.max(1,Math.round((d2-d1)/2592000000));
@@ -102,23 +101,35 @@ function init(){
   const grid=document.getElementById("grid");
   grid.style.gridTemplateColumns="repeat("+cl+",minmax(0,1fr))";
 
-  for(var i=0;i<target;i++){
-    const n=i+1;
+  let validCount=0;
+  for(var i=0;i<pms.length&&validCount<target;i++){
+    const pm=pms[i];
+    const isValido=VALIDI[pm.esito];
+    const n=validCount+1;
     const el=document.createElement("div");
     el.className="cell";
-    if(i<count){
-      const pm=pms[i];
+    if(isValido){
+      validCount++;
       const c=bc[pm.esito]||"#888";
       el.style.cssText="border:3px solid "+c+";border-radius:8px;display:flex;flex-direction:column;align-items:center;justify-content:center;padding:3px;cursor:pointer;min-height:48px";
       el.innerHTML="<span style='font-size:8px;color:"+c+";line-height:1.2'>"+fd(pm.data)+"</span><span style='font-size:12px;font-weight:500;color:"+c+"'>"+n+"</span>";
       (function(p){el.addEventListener("click",function(){
         const cc=bc[p.esito]||"#888";
-        const label=p.esito||"Nessun esito";
         document.getElementById("ib").innerHTML=
           "<b>"+p.nome+"</b> · "+p.data+
-          "<span class='chip' style='background:"+cc+"'>"+label+"</span>";
+          "<span class='chip' style='background:"+cc+"'>"+p.esito+"</span>";
       });})(pm);
-    } else if(i===count){
+    }
+    grid.appendChild(el);
+  }
+
+  // Celle prossimo e vuote
+  const filled=validCount;
+  for(var j=filled;j<target;j++){
+    const n=j+1;
+    const el=document.createElement("div");
+    el.className="cell";
+    if(j===filled){
       el.style.cssText="border:2px dashed #378ADD;border-radius:8px;display:flex;align-items:center;justify-content:center;min-height:48px";
       el.innerHTML="<span style='font-size:12px;font-weight:500;color:#378ADD'>"+n+"</span>";
     } else {
@@ -128,8 +139,8 @@ function init(){
     grid.appendChild(el);
   }
 
-  // Legenda — solo esiti presenti
-  const esitiUsati=[...new Set(pms.map(function(p){return p.esito;}).filter(Boolean))];
+  // Legenda — solo esiti validi presenti
+  const esitiUsati=[...new Set(pms.filter(function(p){return VALIDI[p.esito];}).map(function(p){return p.esito;}))];
   const leg=document.getElementById("legend");
   esitiUsati.forEach(function(e){
     const c=bc[e]||"#888";
