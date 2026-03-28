@@ -65,11 +65,11 @@ function cols(t){return t<=8?4:t<=15?5:t<=30?6:t<=50?8:10}
 function init(){
   const params=new URLSearchParams(window.location.search);
   const raw=decodeURIComponent(params.get("p1")||"");
-  const parts=raw.split("|");
+  const parts=raw.split("§");
   const target=parseInt(parts[0])||0;
   const ds=parts[2]||"";
   const de=parts[3]||"";
-  const rowsRaw=parts.slice(4).join("|");
+  const rowsRaw=parts[4]||"";
 
   const VALIDI={"Presentazione":true,"Iscrizione":true,"Dare Seguito":true,"No BuonFine":true};
 
