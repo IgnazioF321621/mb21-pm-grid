@@ -64,11 +64,12 @@ function cols(t){return t<=8?4:t<=15?5:t<=30?6:t<=50?8:10}
 
 function init(){
   const params=new URLSearchParams(window.location.search);
-  const parts=decodeURIComponent(params.get("p1")||"").split("|");
+  const raw=decodeURIComponent(params.get("p1")||"");
+  const parts=raw.split("|");
   const target=parseInt(parts[0])||0;
   const ds=parts[2]||"";
   const de=parts[3]||"";
-  const rowsRaw=parts[4]||"";
+  const rowsRaw=parts.slice(4).join("|");
 
   // Ogni PM è "nome|esito|data" separato da ";"
   const pms=rowsRaw?rowsRaw.split(";").map(function(r){
