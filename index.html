@@ -71,6 +71,9 @@ function init(){
   const de=parts[3]||"";
   const rowsRaw=parts.slice(4).join("|");
 
+  // DEBUG TEMPORANEO
+  document.getElementById("ib").textContent="parts[0]="+parts[0]+" parts[4]="+parts[4]+" rowsRaw_len="+rowsRaw.length+" firstSemi="+rowsRaw.indexOf(";")+" firstChar="+rowsRaw.charCodeAt(0);
+
   // Ogni PM è "nome|esito|data" separato da ";"
   const pms=rowsRaw?rowsRaw.split(";").map(function(r){
     const f=r.split("|");
