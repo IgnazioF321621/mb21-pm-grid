@@ -62,11 +62,11 @@ function init(){
   const target=parseInt(params.get("t"))||0;
   const ds=params.get("ds")||"";
   const de=params.get("de")||"";
-  const esiti=(params.get("e")||"").split(",").map(s=>s.trim()).filter(Boolean);
+  const esiti=(params.get("e")||"").split(",").map(s=>s.trim());
   const nomi=(params.get("n")||"").split(",").map(s=>s.trim()).filter(Boolean);
-  const date=(params.get("d")||"").split(",").map(s=>s.trim()).filter(Boolean);
+  const date=(params.get("d")||"").split(",").map(s=>s.trim());
 
-  const count=esiti.length;
+  const count=nomi.length;
   const d1=parseDate(ds),d2=parseDate(de);
   let ms=1;
   if(d1&&d2) ms=Math.max(1,Math.round((d2-d1)/2592000000));
@@ -93,9 +93,10 @@ function init(){
     const el=document.createElement("div");
     el.className="cell";
     if(i<count){
-      const c=bc[esiti[i]]||"#ccc";
+      const esito=esiti[i]||"";
+      const c=bc[esito]||"#888";
       el.style.cssText="border:3px solid "+c+";border-radius:8px;display:flex;flex-direction:column;align-items:center;justify-content:center;padding:3px;cursor:pointer;min-height:48px";
-      el.innerHTML="<span style='font-size:8px;color:"+c+";line-height:1.2'>"+fd(date[i])+"</span><span style='font-size:12px;font-weight:500;color:"+c+"'>"+n+"</span>";
+      el.innerHTML="<span style='font-size:8px;color:"+c+";line-height:1.2'>"+fd(date[i]||"")+"</span><span style='font-size:12px;font-weight:500;color:"+c+"'>"+n+"</span>";
       (function(idx){el.addEventListener("click",function(){
         document.getElementById("ib").innerHTML="<b>"+(nomi[idx]||"—")+"</b> · "+(date[idx]||"—")+" · "+(esiti[idx]||"—");
       });})(i);
