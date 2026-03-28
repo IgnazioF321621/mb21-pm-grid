@@ -45,7 +45,7 @@ h3{font-size:13px;font-weight:500;color:#111;margin-bottom:8px}
 </div>
 
 <script>
-const bc={"Iscrizione":"#2E7D32","No BuonFine":"#C62828","Presentazione":"#1565C0","Dare Seguito":"#E65100"};
+const bc={"Iscrizione":"#2E7D32","No BuonFine":"#C62828","Presentazione":"#1565C0","Dare Seguito":"#00897B"};
 
 function parseDate(s){
   if(!s) return null;
@@ -75,7 +75,7 @@ function init(){
 
   const pms=rowsRaw?rowsRaw.split(";").map(function(r){
     const f=r.split("~");
-    return{nome:f[0]||"",esito:f[1]||"",data:f[2]||""};
+    return{nome:f[0]||"",esito:f[1]||"",data:f[2]||"",ospite:f[3]||""};
   }).filter(function(r){return r.nome;}):[]; 
 
   const pmsValidi=pms.filter(function(p){return VALIDI[p.esito];});
@@ -108,12 +108,13 @@ function init(){
     if(i<count){
       const pm=pmsValidi[i];
       const c=bc[pm.esito]||"#888";
+      const ospiteHtml=pm.ospite?"<span style='font-size:7px;color:"+c+";line-height:1.1;max-width:100%;overflow:hidden;text-overflow:ellipsis;white-space:nowrap'>"+pm.ospite+"</span>":"";
       el.style.cssText="border:3px solid "+c+";border-radius:8px;display:flex;flex-direction:column;align-items:center;justify-content:center;padding:3px;cursor:pointer;min-height:48px";
-      el.innerHTML="<span style='font-size:8px;color:"+c+";line-height:1.2'>"+fd(pm.data)+"</span><span style='font-size:12px;font-weight:500;color:"+c+"'>"+n+"</span>";
+      el.innerHTML="<span style='font-size:8px;color:"+c+";line-height:1.2'>"+fd(pm.data)+"</span><span style='font-size:12px;font-weight:500;color:"+c+"'>"+n+"</span>"+ospiteHtml;
       (function(p){el.addEventListener("click",function(){
         const cc=bc[p.esito]||"#888";
         document.getElementById("ib").innerHTML=
-          "<b>"+p.nome+"</b> · "+p.data+
+          "<b>"+p.nome+"</b>"+(p.ospite?" · ospite: <b>"+p.ospite+"</b>":"")+" · "+p.data+
           "<span class='chip' style='background:"+cc+"'>"+p.esito+"</span>";
       });})(pm);
     } else if(i===count){
