@@ -45,23 +45,19 @@ h3{font-size:13px;font-weight:500;color:#111;margin-bottom:8px}
 </div>
 
 <script>
-const bc={"Iscrizione":"#2E7D32","No BuonFine":"#C62828","Presentazione":"#1565C0","Dare Seguito":"#7B1FA2"};
-
+const bc={"Iscrizione":"#2E7D32","No BuonFine":"#C62828","Presentazione":"#1565C0","Dare Seguito":"#7B1FA2","Prodotti":"#E65100"};
 function parseDate(s){
   if(!s) return null;
   const p=s.split("/");
   if(p.length===3) return new Date(+p[2],+p[1]-1,+p[0]);
   return new Date(s);
 }
-
 function fd(s){
   if(!s) return "";
   const p=s.split("/");
   return p.length===3?p[0]+"/"+p[1]+"/"+p[2].slice(-2):s;
 }
-
 function cols(t){return t<=8?4:t<=15?5:t<=30?6:t<=50?8:10}
-
 function init(){
   const params=new URLSearchParams(window.location.search);
   const raw=decodeURIComponent(params.get("p1")||"");
@@ -70,37 +66,40 @@ function init(){
   const ds=parts[2]||"";
   const de=parts[3]||"";
   const rowsRaw=parts[4]||"";
-
-  const VALIDI={"Presentazione":true,"Iscrizione":true,"Dare Seguito":true,"No BuonFine":true};
-
+  const VALIDI={"Presentazione":true,"Iscrizione":true,"Dare Seguito":true,"No BuonFine":true,"Prodotti":true};
   const pms=rowsRaw?rowsRaw.split(";").map(function(r){
     const f=r.split("~");
     return{nome:f[0]||"",esito:f[1]||"",data:f[2]||"",ospite:f[3]||""};
   }).filter(function(r){return r.nome;}):[]; 
-
   const pmsValidi=pms.filter(function(p){return VALIDI[p.esito];});
   const count=pmsValidi.length;
   const d1=parseDate(ds),d2=parseDate(de);
-  let ms=1;
-  if(d1&&d2) ms=Math.max(1,Math.round((d2-d1)/2592000000));
+  const oggi=new Date();
+  oggi.setHours(0,0,0,0);
+  // Mesi totali del periodo
+  let msTot=1;
+  if(d1&&d2) msTot=Math.max(1,Math.round((d2-d1)/2592000000));
+  // Mesi trascorsi dall'inizio ad oggi (max = mesi totali)
+  let msTras=1;
+  if(d1) msTras=Math.max(1,Math.min(msTot,Math.round((oggi-d1)/2592000000)));
+  // Mesi rimanenti da oggi alla fine (min = 1)
+  let msRim=1;
+  if(d2) msRim=Math.max(1,Math.round((d2-oggi)/2592000000));
   const mc=Math.max(0,target-count);
   const pct=target>0?Math.min(100,Math.round(count/target*100)):0;
-  const rn=mc>0?Math.ceil(mc/Math.max(1,ms)):0;
-  const ra=Math.round(count/Math.max(1,ms));
-
+  const rn=mc>0?Math.ceil(mc/msRim):0;
+  const ra=Math.round(count/msTras);
   document.getElementById("sf").textContent=count;
   document.getElementById("sm").textContent=mc;
   document.getElementById("sr").textContent=rn>0?rn:"OK";
   document.getElementById("pf").style.width=pct+"%";
   document.getElementById("pp").textContent=pct+"% completato";
   document.getElementById("pt").textContent=target+" PM";
-  document.getElementById("rm").textContent=ms+" mesi";
+  document.getElementById("rm").textContent=msTot+" mesi";
   document.getElementById("ra").textContent=ra+" PM/mese";
-
   const cl=cols(target);
   const grid=document.getElementById("grid");
   grid.style.gridTemplateColumns="repeat("+cl+",minmax(0,1fr))";
-
   for(var i=0;i<target;i++){
     const n=i+1;
     const el=document.createElement("div");
@@ -126,9 +125,7 @@ function init(){
     }
     grid.appendChild(el);
   }
-
-  // Legenda — solo esiti validi presenti
-  const esitiUsati=[...new Set(pms.filter(function(p){return VALIDI[p.esito];}).map(function(p){return p.esito;}))];
+  const esitiUsati=[...new Set(pmsValidi.map(function(p){return p.esito;}))];
   const leg=document.getElementById("legend");
   esitiUsati.forEach(function(e){
     const c=bc[e]||"#888";
@@ -138,7 +135,6 @@ function init(){
     leg.appendChild(item);
   });
 }
-
 init();
 </script>
 </body>
